@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #eaeaea;
+  font-family: Arial, sans-serif;
+}
+
+/* Board container: using CSS grid; assumes 5 columns for 5 categories */
+#board-container {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  padding: 20px;
+}
+
+/* Category header styling */
+.category {
+  background-color: #1a73e8;
+  color: white;
+  text-align: center;
+  font-weight: bold;
+  padding: 10px;
+}
+
+/* Clue cell styling */
+.clue-cell {
+  background-color: #f1c40f;
+  border: 2px solid #fff;
+  color: black;
+  font-weight: bold;
+  text-align: center;
+  padding: 20px;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Marked as completed */
+.clue-cell.completed {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* Modal styling */
+#modal {
+  display: none; /* Initially hidden */
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+}
+
+#modal .modal-content {
+  background-color: #fff;
+  margin: 10% auto;
+  padding: 20px;
+  border-radius: 5px;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+}
+
+#modal .close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.game-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.score-display {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+} 
