@@ -97,6 +97,18 @@ function isQuestionFormat(answer) {
   return /^(what|who|where|when|why|how)(\s+is|\s+are|\s+was|\s+were)\s+/i.test(cleanAnswer);
 }
 
+// Utility: Extract and validate image URL from question text
+function extractImageUrl(question) {
+  const imgRegex = /<a href="([^"]+)"[^>]*>/;
+  const match = question.match(imgRegex);
+  return match ? match[1] : null;
+}
+
+// Utility: Clean question text by removing HTML tags
+function cleanQuestionText(question) {
+  return question.replace(/<[^>]*>/g, '');
+}
+
 // Get random question
 router.get('/question', (req, res) => {
   if (questions.length === 0) {
@@ -105,7 +117,12 @@ router.get('/question', (req, res) => {
   const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
   // Don't send the answer to the client
   const { answer, ...questionWithoutAnswer } = randomQuestion;
-  res.json(questionWithoutAnswer);
+  const imageUrl = extractImageUrl(randomQuestion.question);
+  res.json({
+    ...questionWithoutAnswer,
+    imageUrl: imageUrl,
+    hasImage: !!imageUrl
+  });
 });
 
 // Check answer
@@ -198,11 +215,14 @@ router.get('/board', (req, res) => {
     validValues.forEach(val => {
       const clue = boardQuestions.find(q => q.category === category && parseInt(q.value.replace('$', '')) === val);
       if (clue) {
+        const imageUrl = extractImageUrl(clue.question);
         boardData.clues[category][val] = {
           id: clue.id,
-          question: clue.question,
+          question: cleanQuestionText(clue.question),
+          imageUrl: imageUrl,
           answer: clue.answer,
-          value: val
+          value: val,
+          hasImage: !!imageUrl
         };
       }
     });
@@ -211,10 +231,40 @@ router.get('/board', (req, res) => {
   res.json(boardData);
 });
 
-// Improved isCloseEnough function
+// Utility: Extract last name from full name
+function extractLastName(name) {
+  return name.split(' ').pop().toLowerCase();
+}
+
+// Utility: Normalize names for comparison
+function normalizeNameAnswer(answer, correctAnswer) {
+  // Remove common titles and prefixes
+  const titles = ['dr', 'mr', 'mrs', 'ms', 'prof', 'sir', 'dame'];
+  let normalizedAnswer = answer.toLowerCase();
+  let normalizedCorrect = correctAnswer.toLowerCase();
+  
+  titles.forEach(title => {
+    normalizedAnswer = normalizedAnswer.replace(new RegExp(`^${title}\\.?\\s+`), '');
+    normalizedCorrect = normalizedCorrect.replace(new RegExp(`^${title}\\.?\\s+`), '');
+  });
+
+  // If correct answer has multiple parts (full name) and user provided last name only
+  if (normalizedCorrect.includes(' ') && !normalizedAnswer.includes(' ')) {
+    return extractLastName(normalizedAnswer) === extractLastName(normalizedCorrect);
+  }
+
+  return normalizedAnswer === normalizedCorrect;
+}
+
+// Update the isCloseEnough function
 function isCloseEnough(str1, str2) {
   // Direct match
   if (str1 === str2) return true;
+  
+  // Name comparison for "who is" answers
+  if (str1.startsWith('who') || str2.startsWith('who')) {
+    return normalizeNameAnswer(str1, str2);
+  }
   
   // Check for plural/singular variations
   if (str1 + 's' === str2 || str1 === str2 + 's') return true;

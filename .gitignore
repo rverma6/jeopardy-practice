@@ -113,4 +113,12 @@ out/
 
 # React specific
 .env.development
-.env.production 
+.env.production
+
+# Environment files
+.env
+.env.local
+.env.*.local
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local 
